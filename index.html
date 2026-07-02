@@ -896,19 +896,56 @@
             });
         }
         
-        // GitHub 登录功能
+        // GitHub 登录功能 - 使用隐式授权模式
         function loginWithGithub() {
-            window.open('/.netlify/functions/github-login', 'github-login', 'width=600,height=700');
+            const clientId = 'Ov23liHXLgFXwJN2Jv8c';
+            const redirectUri = window.location.origin + '/index.html';
+            const scope = 'read:user';
+            const state = Math.random().toString(36).substring(7);
+            localStorage.setItem('github_oauth_state', state);
+            
+            const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}&response_type=token`;
+            window.location.href = authUrl;
         }
         
-        // 监听登录回调
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'github-login') {
-                const user = event.data.user;
-                localStorage.setItem('github_user', JSON.stringify(user));
-                updateUI(user);
+        // 处理OAuth回调
+        function handleOAuthCallback() {
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token')) {
+                const params = new URLSearchParams(hash.substring(1));
+                const token = params.get('access_token');
+                const state = params.get('state');
+                const savedState = localStorage.getItem('github_oauth_state');
+                
+                if (token && state === savedState) {
+                    // 获取用户信息
+                    fetch('https://api.github.com/user', {
+                        headers: { 'Authorization': `token ${token}`, 'User-Agent': 'ServoSelector' }
+                    })
+                    .then(res => res.json())
+                    .then(user => {
+                        const userData = {
+                            id: user.id,
+                            login: user.login,
+                            name: user.name || user.login,
+                            avatar: user.avatar_url,
+                            token: token
+                        };
+                        localStorage.setItem('github_user', JSON.stringify(userData));
+                        localStorage.removeItem('github_oauth_state');
+                        // 清除URL中的hash
+                        window.location.hash = '';
+                        window.location.reload();
+                    })
+                    .catch(err => {
+                        console.error('Login failed:', err);
+                        alert('登录失败，请重试');
+                    });
+                    return true;
+                }
             }
-        });
+            return false;
+        }
         
         // 更新UI
         function updateUI(user) {
@@ -940,6 +977,11 @@
         
         // 页面加载时检查登录状态
         document.addEventListener('DOMContentLoaded', function() {
+            // 先处理OAuth回调
+            if (handleOAuthCallback()) {
+                return; // 处理回调后会自动刷新页面
+            }
+            
             const savedUser = localStorage.getItem('github_user');
             if (savedUser) {
                 try {
