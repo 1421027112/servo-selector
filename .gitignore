@@ -1,0 +1,18 @@
+# Python scripts
+*.py
+!create_deploy.py
+
+# Deploy files
+deploy.zip
+deploy/
+
+# Watermark files
+汇川伺服选型工具-江下酒水印版.html
+汇川伺服选型工具-源代码-江下酒.txt
+
+# Node modules
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
