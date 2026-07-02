@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汇川伺服选型工具</title>
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f6902fbf0c0f86496bf0fce3e1b06532";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .header h1 { font-size: 26px; margin-bottom: 8px; }
+        .header p { font-size: 13px; opacity: 0.9; }
+        .content { padding: 25px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+        }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .btn-query {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn-query:hover { opacity: 0.9; }
+        .results-container { margin-top: 20px; }
+        .result-card {
+            margin-bottom: 20px;
+            padding: 18px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #0066cc;
+        }
+        .result-card.v220 { border-left-color: #28a745; }
+        .result-card.v380 { border-left-color: #dc3545; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #0066cc;
+        }
+        .result-header.v220 { border-bottom-color: #28a745; }
+        .result-header.v380 { border-bottom-color: #dc3545; }
+        .result-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .result-title.v220 { color: #28a745; }
+        .result-title.v380 { color: #dc3545; }
+        .voltage-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .voltage-badge.v220 { background: #28a745; }
+        .voltage-badge.v380 { background: #dc3545; }
+        .result-table { width: 100%; border-collapse: collapse; }
+        .result-table tr { border-bottom: 1px solid #eee; }
+        .result-table td { padding: 8px 6px; font-size: 13px; }
+        .result-table td:first-child { width: 110px; font-weight: bold; color: #555; }
+        .result-table td:last-child {
+            color: #333;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: #0066cc;
+            background: white;
+            border: 1px solid #0066cc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .copy-btn:hover { background: #0066cc; color: white; }
+        .note {
+            margin-top: 15px;
+            padding: 12px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #856404;
+        }
+        .warning {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8d7da;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .footer {
+            text-align: center;
+            padding: 12px;
+            color: #666;
+            font-size: 11px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>汇川伺服选型工具</h1>
+            <p>基于汇川官方选型表数据 | 支持多电压等级显示</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>驱动器系列</label>
+                    <select id="driverSeries">
+                        <option value="SV660N">SV660N系列 (总线型)</option>
+                        <option value="SV660P">SV660P系列 (脉冲型)</option>
+                        <option value="SV660F">SV660F系列 (PROFINET总线型)</option>
+                        <option value="SV630N">SV630N系列 (总线型)</option>
+                        <option value="SV630P">SV630P系列 (脉冲型)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>电机类型</label>
+                    <select id="motorType">
+                        <option value="no_brake">无抱闸</option>
+                        <option value="brake">有抱闸</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>电机功率 (KW)</label>
+                    <select id="motorPower">
+                        <option value="">请选择电机功率</option>
+                        <option value="0.03">0.03 KW (30W)</option>
+                        <option value="0.05">0.05 KW (50W)</option>
+                        <option value="0.1">0.1 KW (100W)</option>
+                        <option value="0.2">0.2 KW (200W)</option>
+                        <option value="0.4">0.4 KW (400W)</option>
+                        <option value="0.55">0.55 KW (550W)</option>
+                        <option value="0.75">0.75 KW (750W)</option>
+                        <option value="0.85">0.85 KW (850W)</option>
+                        <option value="1.0">1.0 KW</option>
+                        <option value="1.3">1.3 KW</option>
+                        <option value="1.5">1.5 KW</option>
+                        <option value="1.8">1.8 KW</option>
+                        <option value="2.0">2.0 KW</option>
+                        <option value="2.5">2.5 KW</option>
+                        <option value="2.9">2.9 KW</option>
+                        <option value="3.0">3.0 KW</option>
+                        <option value="4.0">4.0 KW</option>
+                        <option value="4.4">4.4 KW</option>
+                        <option value="5.0">5.0 KW</option>
+                        <option value="5.5">5.5 KW</option>
+                        <option value="7.5">7.5 KW</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>线缆长度</label>
+                    <select id="cableLength">
+                        <option value="3.0">3米</option>
+                        <option value="5.0">5米</option>
+                        <option value="10.0">10米</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="btn-query" onclick="querySelection()">查询选型</button>
+            
+            <div class="results-container" id="resultsContainer"></div>
+            
+            <div class="note">
+                <strong>选型规则：</strong>
+                <ul style="margin-top: 6px; padding-left: 18px;">
+                    <li>编码线：N/F系列=多圈，P系列=单圈</li>
+                    <li>MS1H1 B类型：P124(多圈)/P114(单圈)</li>
+                    <li>MS1H1 C类型：非抱闸P121/P111，抱闸P124/P114</li>
+                    <li>MS1H2/MS1H3：P121(多圈)/P111(单圈)</li>
+                    <li>MS1H4：P124(多圈)/P114(单圈)</li>
+                    <li>动力线：MS1H1/MS1H4=M107/B107，MS1H2/MS1H3=M111/B111</li>
+                    <li>IO线：N系列无IO线，P/F系列有IO线(S6-C6)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            汇川伺服选型工具 v11.0 | 数据来源：汇川官方选型表
+        </div>
+    </div>
+    
+    <script>
+        // 真实选型数据 - 包含所有电压等级选项
+        // hasBrake: true=有抱闸电机, false=无抱闸电机
+        const selectionData = [
+            // ============ SV660N系列 ============
+            // MS1H1系列
+            {series:'SV660N', power:'0.05', voltage:'单相220V', driver:'SV660NS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-05B30CB-A330R', motorB:'MS1H1-05B30CB-A332R', hasBrake:true},
+            {series:'SV660N', power:'0.1', voltage:'单相220V', driver:'SV660NS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10B30CB-A330R', motorB:'MS1H1-10B30CB-A332R', hasBrake:true},
+            {series:'SV660N', power:'0.2', voltage:'单相220V', driver:'SV660NS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-20B30CB-A331R', motorB:'MS1H1-20B30CB-A334R', hasBrake:true},
+            {series:'SV660N', power:'0.4', voltage:'单相220V', driver:'SV660NS2R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-40B30CB-A331R', motorB:'MS1H1-40B30CB-A334R', hasBrake:true},
+            {series:'SV660N', power:'0.55', voltage:'单相220V', driver:'SV660NS5R3i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-55B30CB-A331R', motorB:'-', hasBrake:false},
+            {series:'SV660N', power:'0.75', voltage:'单相220V', driver:'SV660NS5R3i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-75B30CB-A331R', motorB:'MS1H1-75B30CB-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.0', voltage:'单相/三相220V', driver:'SV660NS7R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10C30CB-A330R', motorB:'MS1H1-10C30CB-A332R', hasBrake:true},
+            {series:'SV660N', power:'1.5', voltage:'单相/三相220V', driver:'SV660NS012i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-15C30CB-A330R', motorB:'-', hasBrake:false},
+            {series:'SV660N', power:'1.5', voltage:'三相220V', driver:'SV660NSC12i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-15C30CB-A331R', motorB:'-', hasBrake:false},
+            
+            // MS1H2系列
+            {series:'SV660N', power:'1.0', voltage:'单相/三相220V', driver:'SV660NS7R6i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CD-A331R', motorB:'MS1H2-10C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.0', voltage:'三相380V', driver:'SV660NT3R5i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CD-A331R', motorB:'MS1H2-10C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.5', voltage:'单相/三相220V', driver:'SV660NS7R6i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CD-A331R', motorB:'MS1H2-15C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.5', voltage:'三相380V', driver:'SV660NT5R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CD-A331R', motorB:'MS1H2-15C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'2.0', voltage:'单相/三相220V', driver:'SV660NS7R6i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CD-A331R', motorB:'MS1H2-20C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'2.0', voltage:'三相380V', driver:'SV660NT8R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CD-A331R', motorB:'MS1H2-20C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'2.5', voltage:'三相380V', driver:'SV660NTD12i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-25C30CD-A331R', motorB:'MS1H2-25C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'3.0', voltage:'三相380V', driver:'SV660NTD12i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-30C30CD-A331R', motorB:'MS1H2-30C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'4.0', voltage:'三相380V', driver:'SV660NTD17i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-40C30CD-A331R', motorB:'MS1H2-40C30CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'5.0', voltage:'三相380V', driver:'SV660NTD171i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-50C30CD-A331R', motorB:'MS1H2-50C30CD-A334R', hasBrake:true},
+            
+            // MS1H3系列
+            {series:'SV660N', power:'0.85', voltage:'单相/三相220V', driver:'SV660NS7R6i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CD-A331R', motorB:'MS1H3-85B15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'0.85', voltage:'三相380V', driver:'SV660NT3R5i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CD-A331R', motorB:'MS1H3-85B15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.3', voltage:'单相/三相220V', driver:'SV660NS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CD-A331R', motorB:'MS1H3-13C15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.3', voltage:'三相380V', driver:'SV660NT5R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CD-A331R', motorB:'MS1H3-13C15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.8', voltage:'单相/三相220V', driver:'SV660NS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CD-A331R', motorB:'MS1H3-18C15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.8', voltage:'三相380V', driver:'SV660NT8R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CD-A331R', motorB:'MS1H3-18C15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'2.9', voltage:'三相380V', driver:'SV660NTD12i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-29C15CD-A331R', motorB:'MS1H3-29C15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'4.4', voltage:'三相380V', driver:'SV660NT017i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-44C15CD-A331R', motorB:'MS1H3-44C15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'5.5', voltage:'三相380V', driver:'SV660NT021i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-55C15CD-A331R', motorB:'MS1H3-55C15CD-A334R', hasBrake:true},
+            {series:'SV660N', power:'7.5', voltage:'三相380V', driver:'SV660NT026i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-75C15CD-A331R', motorB:'MS1H3-75C15CD-A334R', hasBrake:true},
+            
+            // MS1H4系列
+            {series:'SV660N', power:'0.05', voltage:'单相220V', driver:'SV660NS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-05B30CB-A330R', motorB:'MS1H4-05B30CB-A332R', hasBrake:true},
+            {series:'SV660N', power:'0.1', voltage:'单相220V', driver:'SV660NS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10B30CB-A330R', motorB:'MS1H4-10B30CB-A332R', hasBrake:true},
+            {series:'SV660N', power:'0.2', voltage:'单相220V', driver:'SV660NS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-20B30CB-A331R', motorB:'MS1H4-20B30CB-A334R', hasBrake:true},
+            {series:'SV660N', power:'0.4', voltage:'单相220V', driver:'SV660NS2R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-40B30CB-A331R', motorB:'MS1H4-40B30CB-A334R', hasBrake:true},
+            {series:'SV660N', power:'0.55', voltage:'单相220V', driver:'SV660NS5R3i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-55B30CB-A331R', motorB:'-', hasBrake:false},
+            {series:'SV660N', power:'0.75', voltage:'单相220V', driver:'SV660NS5R3i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-75B30CB-A331R', motorB:'MS1H4-75B30CB-A334R', hasBrake:true},
+            {series:'SV660N', power:'1.0', voltage:'单相/三相220V', driver:'SV660NS7R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10C30CB-A331R', motorB:'MS1H4-10C30CB-A334R', hasBrake:true},
+            
+            // ============ SV660P系列 ============
+            // MS1H1系列
+            {series:'SV660P', power:'0.03', voltage:'单相220V', driver:'SV660PS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-03B30CB-U210R-S', motorB:'-', hasBrake:false},
+            {series:'SV660P', power:'0.05', voltage:'单相220V', driver:'SV660PS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-05B30CB-A330R', motorB:'MS1H1-05B30CB-A332R', hasBrake:true},
+            {series:'SV660P', power:'0.1', voltage:'单相220V', driver:'SV660PS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10B30CB-A330R', motorB:'MS1H1-10B30CB-A332R', hasBrake:true},
+            {series:'SV660P', power:'0.2', voltage:'单相220V', driver:'SV660PS2R8i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-20B30CB-A331R', motorB:'MS1H1-20B30CB-A334R', hasBrake:true},
+            {series:'SV660P', power:'0.4', voltage:'单相220V', driver:'SV660PS2R8i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-40B30CB-A331R', motorB:'MS1H1-40B30CB-A334R', hasBrake:true},
+            {series:'SV660P', power:'0.55', voltage:'单相220V', driver:'SV660PS5R5i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-55B30CB-A331R', motorB:'-', hasBrake:false},
+            {series:'SV660P', power:'0.75', voltage:'单相220V', driver:'SV660PS5R5i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-75B30CB-A331R', motorB:'MS1H1-75B30CB-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.0', voltage:'单相/三相220V', driver:'SV660PS7R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10C30CB-A331R', motorB:'MS1H1-10C30CB-A334R', hasBrake:true},
+            
+            // MS1H2系列
+            {series:'SV660P', power:'1.0', voltage:'单相/三相220V', driver:'SV660PS7R6i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CD-A331R', motorB:'MS1H2-10C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.0', voltage:'三相380V', driver:'SV660PT3R5i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CD-A331R', motorB:'MS1H2-10C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.5', voltage:'单相/三相220V', driver:'SV660PS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CD-A331R', motorB:'MS1H2-15C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.5', voltage:'三相380V', driver:'SV660PT5R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CD-A331R', motorB:'MS1H2-15C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'2.0', voltage:'单相/三相220V', driver:'SV660PS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CD-A331R', motorB:'MS1H2-20C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'2.0', voltage:'三相380V', driver:'SV660PT8R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CD-A331R', motorB:'MS1H2-20C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'2.5', voltage:'三相380V', driver:'SV660PT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-25C30CD-A331R', motorB:'MS1H2-25C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'3.0', voltage:'三相380V', driver:'SV660PT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-30C30CD-A331R', motorB:'MS1H2-30C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'4.0', voltage:'三相380V', driver:'SV660PT017i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-40C30CD-A331R', motorB:'MS1H2-40C30CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'5.0', voltage:'三相380V', driver:'SV660PT021i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-50C30CD-A331R', motorB:'MS1H2-50C30CD-A334R', hasBrake:true},
+            
+            // MS1H3系列
+            {series:'SV660P', power:'0.85', voltage:'单相/三相220V', driver:'SV660PS7R6i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CD-A331R', motorB:'MS1H3-85B15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'0.85', voltage:'三相380V', driver:'SV660PT3R5i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CD-A331R', motorB:'MS1H3-85B15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.3', voltage:'单相/三相220V', driver:'SV660PS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CD-A331R', motorB:'MS1H3-13C15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.3', voltage:'三相380V', driver:'SV660PT5R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CD-A331R', motorB:'MS1H3-13C15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.8', voltage:'单相/三相220V', driver:'SV660PS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CD-A331R', motorB:'MS1H3-18C15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.8', voltage:'三相380V', driver:'SV660PT8R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CD-A331R', motorB:'MS1H3-18C15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'2.9', voltage:'三相380V', driver:'SV660PT012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-29C15CD-A331R', motorB:'MS1H3-29C15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'4.4', voltage:'三相380V', driver:'SV660PT017i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-44C15CD-A331R', motorB:'MS1H3-44C15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'5.5', voltage:'三相380V', driver:'SV660PT021i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-55C15CD-A331R', motorB:'MS1H3-55C15CD-A334R', hasBrake:true},
+            {series:'SV660P', power:'7.5', voltage:'三相380V', driver:'SV660PT026i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-75C15CD-A331R', motorB:'MS1H3-75C15CD-A334R', hasBrake:true},
+            
+            // MS1H4系列
+            {series:'SV660P', power:'0.05', voltage:'单相220V', driver:'SV660PS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-05B30CB-A330R', motorB:'MS1H4-05B30CB-A332R', hasBrake:true},
+            {series:'SV660P', power:'0.1', voltage:'单相220V', driver:'SV660PS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10B30CB-A330R', motorB:'MS1H4-10B30CB-A332R', hasBrake:true},
+            {series:'SV660P', power:'0.2', voltage:'单相220V', driver:'SV660PS2R8i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-20B30CB-A331R', motorB:'MS1H4-20B30CB-A334R', hasBrake:true},
+            {series:'SV660P', power:'0.4', voltage:'单相220V', driver:'SV660PS2R8i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-40B30CB-A331R', motorB:'MS1H4-40B30CB-A334R', hasBrake:true},
+            {series:'SV660P', power:'0.55', voltage:'单相220V', driver:'SV660PS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-55B30CB-A331R', motorB:'-', hasBrake:false},
+            {series:'SV660P', power:'0.75', voltage:'单相220V', driver:'SV660PS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-75B30CB-A331R', motorB:'MS1H4-75B30CB-A334R', hasBrake:true},
+            {series:'SV660P', power:'1.0', voltage:'单相/三相220V', driver:'SV660PS7R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10C30CB-A331R', motorB:'MS1H4-10C30CB-A334R', hasBrake:true},
+            
+            // ============ SV660F系列 ============
+            // MS1H1系列
+            {series:'SV660F', power:'0.03', voltage:'单相220V', driver:'SV660FS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-03B30CB-U210R-S', motorB:'-', hasBrake:false},
+            {series:'SV660F', power:'0.05', voltage:'单相220V', driver:'SV660FS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-05B30CB-A330R', motorB:'MS1H1-05B30CB-A332R', hasBrake:true},
+            {series:'SV660F', power:'0.1', voltage:'单相220V', driver:'SV660FS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10B30CB-A330R', motorB:'MS1H1-10B30CB-A332R', hasBrake:true},
+            {series:'SV660F', power:'0.2', voltage:'单相220V', driver:'SV660FS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-20B30CB-A331R', motorB:'MS1H1-20B30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'0.4', voltage:'单相220V', driver:'SV660FS2R8i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-40B30CB-A331R', motorB:'MS1H1-40B30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'0.55', voltage:'单相220V', driver:'SV660FS5R5i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-55B30CB-A331R', motorB:'-', hasBrake:false},
+            {series:'SV660F', power:'0.75', voltage:'单相220V', driver:'SV660FS5R5i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-75B30CB-A331R', motorB:'MS1H1-75B30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.0', voltage:'单相/三相220V', driver:'SV660FS7R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10C30CB-A331R', motorB:'MS1H1-10C30CB-A334R', hasBrake:true},
+            
+            // MS1H2系列
+            {series:'SV660F', power:'1.0', voltage:'单相/三相220V', driver:'SV660FS7R6i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CB-A331R', motorB:'MS1H2-10C30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.0', voltage:'三相380V', driver:'SV660FT3R5i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CD-A331R', motorB:'MS1H2-10C30CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.5', voltage:'单相/三相220V', driver:'SV660FS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CB-A331R', motorB:'MS1H2-15C30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.5', voltage:'三相380V', driver:'SV660FT5R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CD-A331R', motorB:'MS1H2-15C30CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'2.0', voltage:'单相/三相220V', driver:'SV660FS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CB-A331R', motorB:'MS1H2-20C30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'2.0', voltage:'三相380V', driver:'SV660FT8R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CD-A331R', motorB:'MS1H2-20C30CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'2.5', voltage:'三相380V', driver:'SV660FT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-25C30CD-A331R', motorB:'MS1H2-25C30CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'3.0', voltage:'三相380V', driver:'SV660FT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-30C30CD-A331R', motorB:'MS1H2-30C30CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'4.0', voltage:'三相380V', driver:'SV660FT017i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-40C30CD-A331R', motorB:'MS1H2-40C30CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'5.0', voltage:'三相380V', driver:'SV660FT021i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-50C30CD-A331R', motorB:'MS1H2-50C30CD-A334R', hasBrake:true},
+            
+            // MS1H3系列
+            {series:'SV660F', power:'0.85', voltage:'单相/三相220V', driver:'SV660FS7R6i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CB-A331R', motorB:'MS1H3-85B15CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'0.85', voltage:'三相380V', driver:'SV660FT3R5i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CD-A331R', motorB:'MS1H3-85B15CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.3', voltage:'单相/三相220V', driver:'SV660FS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CB-A331R', motorB:'MS1H3-13C15CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.3', voltage:'三相380V', driver:'SV660FT5R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CD-A331R', motorB:'MS1H3-13C15CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.8', voltage:'单相/三相220V', driver:'SV660FS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CB-A331R', motorB:'MS1H3-18C15CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.8', voltage:'三相380V', driver:'SV660FT8R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CD-A331R', motorB:'MS1H3-18C15CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'2.9', voltage:'三相380V', driver:'SV660FT012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-29C15CD-A331R', motorB:'MS1H3-29C15CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'4.4', voltage:'三相380V', driver:'SV660FT017i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-44C15CD-A331R', motorB:'MS1H3-44C15CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'5.5', voltage:'三相380V', driver:'SV660FT021i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-55C15CD-A331R', motorB:'MS1H3-55C15CD-A334R', hasBrake:true},
+            {series:'SV660F', power:'7.5', voltage:'三相380V', driver:'SV660FT026i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-75C15CD-A331R', motorB:'MS1H3-75C15CD-A334R', hasBrake:true},
+            
+            // MS1H4系列
+            {series:'SV660F', power:'0.05', voltage:'单相220V', driver:'SV660FS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-05B30CB-A330R', motorB:'MS1H4-05B30CB-A332R', hasBrake:true},
+            {series:'SV660F', power:'0.1', voltage:'单相220V', driver:'SV660FS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10B30CB-A330R', motorB:'MS1H4-10B30CB-A332R', hasBrake:true},
+            {series:'SV660F', power:'0.2', voltage:'单相220V', driver:'SV660FS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-20B30CB-A331R', motorB:'MS1H4-20B30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'0.4', voltage:'单相220V', driver:'SV660FS2R8i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-40B30CB-A331R', motorB:'MS1H4-40B30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'0.55', voltage:'单相220V', driver:'SV660FS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-55B30CB-A331R', motorB:'-', hasBrake:false},
+            {series:'SV660F', power:'0.75', voltage:'单相220V', driver:'SV660FS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-75B30CB-A331R', motorB:'MS1H4-75B30CB-A334R', hasBrake:true},
+            {series:'SV660F', power:'1.0', voltage:'单相/三相220V', driver:'SV660FS7R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10C30CB-A331R', motorB:'MS1H4-10C30CB-A334R', hasBrake:true},
+            
+            // ============ SV630P系列 ============
+            // MS1H1系列
+            {series:'SV630P', power:'0.05', voltage:'单相220V', driver:'SV630PS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-05B30CB-T330R', motorB:'MS1H1-05B30CB-T332R', hasBrake:true},
+            {series:'SV630P', power:'0.1', voltage:'单相220V', driver:'SV630PS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10B30CB-T330R', motorB:'MS1H1-10B30CB-T332R', hasBrake:true},
+            
+            // MS1H2系列
+            {series:'SV630P', power:'1.0', voltage:'单相/三相220V', driver:'SV630PS7R6i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CB-T331R', motorB:'MS1H2-10C30CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.0', voltage:'三相380V', driver:'SV630PT3R5i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CD-T331R', motorB:'MS1H2-10C30CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.5', voltage:'单相/三相220V', driver:'SV630PS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CB-T331R', motorB:'MS1H2-15C30CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.5', voltage:'三相380V', driver:'SV630PT5R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CD-T331R', motorB:'MS1H2-15C30CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'2.0', voltage:'单相/三相220V', driver:'SV630PS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CB-T331R', motorB:'MS1H2-20C30CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'2.0', voltage:'三相380V', driver:'SV630PT8R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CD-T331R', motorB:'MS1H2-20C30CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'2.5', voltage:'三相380V', driver:'SV630PT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-25C30CD-T331R', motorB:'MS1H2-25C30CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'3.0', voltage:'三相380V', driver:'SV630PT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-30C30CD-T331R', motorB:'MS1H2-30C30CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'4.0', voltage:'三相380V', driver:'SV630PT017i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-40C30CD-T331R', motorB:'MS1H2-40C30CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'5.0', voltage:'三相380V', driver:'SV630PT021i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-50C30CD-T331R', motorB:'MS1H2-50C30CD-T334R', hasBrake:true},
+            
+            // MS1H3系列
+            {series:'SV630P', power:'0.85', voltage:'单相/三相220V', driver:'SV630PS7R6i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CB-T331R', motorB:'MS1H3-85B15CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'0.85', voltage:'三相380V', driver:'SV630PT3R5i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CD-T331R', motorB:'MS1H3-85B15CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.3', voltage:'单相/三相220V', driver:'SV630PS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CB-T331R', motorB:'MS1H3-13C15CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.3', voltage:'三相380V', driver:'SV630PT5R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CD-T331R', motorB:'MS1H3-13C15CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.8', voltage:'单相/三相220V', driver:'SV630PS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CB-T331R', motorB:'MS1H3-18C15CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.8', voltage:'三相380V', driver:'SV630PT8R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CD-T331R', motorB:'MS1H3-18C15CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'2.9', voltage:'三相380V', driver:'SV630PT012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-29C15CD-T331R', motorB:'MS1H3-29C15CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'4.4', voltage:'三相380V', driver:'SV630PT017i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-44C15CD-T331R', motorB:'MS1H3-44C15CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'5.5', voltage:'三相380V', driver:'SV630PT021i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-55C15CD-T331R', motorB:'MS1H3-55C15CD-T334R', hasBrake:true},
+            {series:'SV630P', power:'7.5', voltage:'三相380V', driver:'SV630PT026i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-75C15CD-T331R', motorB:'MS1H3-75C15CD-T334R', hasBrake:true},
+            
+            // MS1H4系列
+            {series:'SV630P', power:'0.05', voltage:'单相220V', driver:'SV630PS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-05B30CB-T330R', motorB:'MS1H4-05B30CB-T332R', hasBrake:true},
+            {series:'SV630P', power:'0.1', voltage:'单相220V', driver:'SV630PS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10B30CB-T330R', motorB:'MS1H4-10B30CB-T332R', hasBrake:true},
+            {series:'SV630P', power:'0.2', voltage:'单相220V', driver:'SV630PS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-20B30CB-T331R', motorB:'MS1H4-20B30CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'0.4', voltage:'单相220V', driver:'SV630PS2R8i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-40B30CB-T331R', motorB:'MS1H4-40B30CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'0.55', voltage:'单相220V', driver:'SV630PS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-55B30CB-T331R', motorB:'-', hasBrake:false},
+            {series:'SV630P', power:'0.75', voltage:'单相220V', driver:'SV630PS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-75B30CB-T331R', motorB:'MS1H4-75B30CB-T334R', hasBrake:true},
+            {series:'SV630P', power:'1.0', voltage:'单相/三相220V', driver:'SV630PS7R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10C30CB-T331R', motorB:'MS1H4-10C30CB-T334R', hasBrake:true},
+            
+            // ============ SV630N系列 ============
+            // MS1H1系列
+            {series:'SV630N', power:'0.05', voltage:'单相220V', driver:'SV630NS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-05B30CB-T330R', motorB:'MS1H1-05B30CB-T332R', hasBrake:true},
+            {series:'SV630N', power:'0.1', voltage:'单相220V', driver:'SV630NS1R6i', motorSeries:'MS1H1',
+             motorNB:'MS1H1-10B30CB-T330R', motorB:'MS1H1-10B30CB-T332R', hasBrake:true},
+            
+            // MS1H2系列
+            {series:'SV630N', power:'1.0', voltage:'单相/三相220V', driver:'SV630NS7R6i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CB-T331R', motorB:'MS1H2-10C30CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.0', voltage:'三相380V', driver:'SV630NT3R5i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-10C30CD-T331R', motorB:'MS1H2-10C30CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.5', voltage:'单相/三相220V', driver:'SV630NS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CB-T331R', motorB:'MS1H2-15C30CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.5', voltage:'三相380V', driver:'SV630NT5R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-15C30CD-T331R', motorB:'MS1H2-15C30CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'2.0', voltage:'单相/三相220V', driver:'SV630NS012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CB-T331R', motorB:'MS1H2-20C30CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'2.0', voltage:'三相380V', driver:'SV630NT8R4i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-20C30CD-T331R', motorB:'MS1H2-20C30CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'2.5', voltage:'三相380V', driver:'SV630NT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-25C30CD-T331R', motorB:'MS1H2-25C30CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'3.0', voltage:'三相380V', driver:'SV630NT012i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-30C30CD-T331R', motorB:'MS1H2-30C30CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'4.0', voltage:'三相380V', driver:'SV630NT017i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-40C30CD-T331R', motorB:'MS1H2-40C30CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'5.0', voltage:'三相380V', driver:'SV630NT021i', motorSeries:'MS1H2',
+             motorNB:'MS1H2-50C30CD-T331R', motorB:'MS1H2-50C30CD-T334R', hasBrake:true},
+            
+            // MS1H3系列
+            {series:'SV630N', power:'0.85', voltage:'单相/三相220V', driver:'SV630NS7R6i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CB-T331R', motorB:'MS1H3-85B15CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'0.85', voltage:'三相380V', driver:'SV630NT3R5i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-85B15CD-T331R', motorB:'MS1H3-85B15CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.3', voltage:'单相/三相220V', driver:'SV630NS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CB-T331R', motorB:'MS1H3-13C15CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.3', voltage:'三相380V', driver:'SV630NT5R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-13C15CD-T331R', motorB:'MS1H3-13C15CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.8', voltage:'单相/三相220V', driver:'SV630NS012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CB-T331R', motorB:'MS1H3-18C15CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.8', voltage:'三相380V', driver:'SV630NT8R4i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-18C15CD-T331R', motorB:'MS1H3-18C15CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'2.9', voltage:'三相380V', driver:'SV630NT012i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-29C15CD-T331R', motorB:'MS1H3-29C15CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'4.4', voltage:'三相380V', driver:'SV630NT017i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-44C15CD-T331R', motorB:'MS1H3-44C15CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'5.5', voltage:'三相380V', driver:'SV630NT021i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-55C15CD-T331R', motorB:'MS1H3-55C15CD-T334R', hasBrake:true},
+            {series:'SV630N', power:'7.5', voltage:'三相380V', driver:'SV630NT026i', motorSeries:'MS1H3',
+             motorNB:'MS1H3-75C15CD-T331R', motorB:'MS1H3-75C15CD-T334R', hasBrake:true},
+            
+            // MS1H4系列
+            {series:'SV630N', power:'0.05', voltage:'单相220V', driver:'SV630NS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-05B30CB-T330R', motorB:'MS1H4-05B30CB-T332R', hasBrake:true},
+            {series:'SV630N', power:'0.1', voltage:'单相220V', driver:'SV630NS1R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10B30CB-T330R', motorB:'MS1H4-10B30CB-T332R', hasBrake:true},
+            {series:'SV630N', power:'0.2', voltage:'单相220V', driver:'SV630NS2R8i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-20B30CB-T331R', motorB:'MS1H4-20B30CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'0.4', voltage:'单相220V', driver:'SV630NS2R8i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-40B30CB-T331R', motorB:'MS1H4-40B30CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'0.55', voltage:'单相220V', driver:'SV630NS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-55B30CB-T331R', motorB:'-', hasBrake:false},
+            {series:'SV630N', power:'0.75', voltage:'单相220V', driver:'SV630NS5R5i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-75B30CB-T331R', motorB:'MS1H4-75B30CB-T334R', hasBrake:true},
+            {series:'SV630N', power:'1.0', voltage:'单相/三相220V', driver:'SV630NS7R6i', motorSeries:'MS1H4',
+             motorNB:'MS1H4-10C30CB-T331R', motorB:'MS1H4-10C30CB-T334R', hasBrake:true},
+        ];
+        
+        // 编码线规则
+        function getEncoderCable(series, motorSeries, motorModel, isBrake) {
+            const isN = series.includes('N');
+            const isF = series.includes('F');
+            const isMultiTurn = (isN || isF);
+            
+            const isBType = motorModel && (motorModel.includes('-05B') || motorModel.includes('-10B') || 
+                            motorModel.includes('-20B') || motorModel.includes('-40B') || 
+                            motorModel.includes('-55B') || motorModel.includes('-75B'));
+            
+            if (motorSeries === 'MS1H1') {
+                if (isBType) {
+                    return isMultiTurn ? 'S6-L-P124' : 'S6-L-P114';
+                } else {
+                    if (isBrake) {
+                        return isMultiTurn ? 'S6-L-P124' : 'S6-L-P114';
+                    } else {
+                        return isMultiTurn ? 'S6-L-P121' : 'S6-L-P111';
+                    }
+                }
+            } else if (motorSeries === 'MS1H4') {
+                return isMultiTurn ? 'S6-L-P124' : 'S6-L-P114';
+            } else {
+                return isMultiTurn ? 'S6-L-P121' : 'S6-L-P111';
+            }
+        }
+        
+        // 动力线规则
+        function getPowerCable(motorSeries, power, isBrake) {
+            const p = parseFloat(power);
+            const prefix = isBrake ? 'S6-L-B' : 'S6-L-M';
+            if (motorSeries === 'MS1H1' || motorSeries === 'MS1H4') return prefix + '107';
+            else if (motorSeries === 'MS1H2') {
+                if (p >= 4.0) return prefix + '011';
+                return prefix + '111';
+            } else if (motorSeries === 'MS1H3') {
+                if (p >= 4.4) return prefix + '022';
+                if (p >= 2.9) return prefix + '112';
+                return prefix + '111';
+            }
+            return prefix + '111';
+        }
+        
+        // 查询选型
+        function querySelection() {
+            const series = document.getElementById('driverSeries').value;
+            const power = document.getElementById('motorPower').value;
+            const motorType = document.getElementById('motorType').value;
+            const cableLength = document.getElementById('cableLength').value;
+            
+            if (!power) {
+                alert('请选择电机功率！');
+                return;
+            }
+            
+            const isBrake = motorType === 'brake';
+            
+            // 查找所有匹配的数据
+            let matched = selectionData.filter(item => item.series === series && item.power === power);
+            
+            if (matched.length === 0) {
+                alert('未找到匹配的选型数据！');
+                return;
+            }
+            
+            // 如果选择有抱闸，检查是否所有匹配项都没有抱闸
+            if (isBrake) {
+                const hasBrakeOption = matched.some(item => item.hasBrake);
+                if (!hasBrakeOption) {
+                    const container = document.getElementById('resultsContainer');
+                    container.innerHTML = '<div class="warning"><strong>提示：</strong>该功率点（' + power + 'KW）在' + series + '系列中没有抱闸电机可选，请选择"无抱闸"或更换其他功率。</div>';
+                    return;
+                }
+                // 过滤掉没有抱闸的选项
+                matched = matched.filter(item => item.hasBrake);
+            }
+            
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = '';
+            
+            // 按电压分组
+            const voltageGroups = {};
+            matched.forEach(item => {
+                if (!voltageGroups[item.voltage]) {
+                    voltageGroups[item.voltage] = [];
+                }
+                voltageGroups[item.voltage].push(item);
+            });
+            
+            let globalIndex = 0;
+            Object.keys(voltageGroups).forEach(voltage => {
+                const items = voltageGroups[voltage];
+                const is220 = voltage.includes('220');
+                const vClass = is220 ? 'v220' : 'v380';
+                
+                items.forEach((item, idx) => {
+                    globalIndex++;
+                    const motorModel = isBrake ? item.motorB : item.motorNB;
+                    const encoderCable = getEncoderCable(series, item.motorSeries, motorModel, isBrake) + '-' + cableLength;
+                    const powerCable = getPowerCable(item.motorSeries, power, isBrake) + '-' + cableLength;
+                    const isP = series.includes('P') || series.includes('F');
+                    const ioCable = isP ? 'S6-C6-' + cableLength : '-';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'result-card ' + vClass;
+                    card.innerHTML = `
+                        <div class="result-header ${vClass}">
+                            <div class="result-title ${vClass}">方案 ${globalIndex}：${voltage}</div>
+                            <span class="voltage-badge ${vClass}">${voltage}</span>
+                        </div>
+                        <table class="result-table">
+                            <tr><td>驱动器型号：</td><td>${item.driver}</td></tr>
+                            <tr><td>电机型号：</td><td>${motorModel}</td></tr>
+                            <tr><td>动力线型号：</td><td>${powerCable}</td></tr>
+                            <tr><td>编码线型号：</td><td>${encoderCable}</td></tr>
+                            <tr><td>IO线(CN1)：</td><td>${ioCable}</td></tr>
+                        </table>
+                        <button class="copy-btn" onclick="copyResult(this)">复制此方案</button>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+        
+        // 复制选型结果
+        function copyResult(btn) {
+            const card = btn.closest('.result-card');
+            const rows = card.querySelectorAll('.result-table tr');
+            let text = '';
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                text += cells[0].textContent + cells[1].textContent + '\n';
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('已复制到剪贴板');
+            });
+        }
+    </script>
+</body>
+</html>
