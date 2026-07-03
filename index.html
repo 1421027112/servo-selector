@@ -37,88 +37,6 @@
         }
         .header h1 { font-size: 26px; margin-bottom: 8px; }
         .header p { font-size: 13px; opacity: 0.9; }
-        .login-section {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .login-btn {
-            padding: 8px 16px;
-            font-size: 13px;
-            color: white;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s;
-        }
-        .login-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        .login-btn svg {
-            width: 18px;
-            height: 18px;
-            fill: white;
-        }
-        .user-info {
-            display: none;
-            align-items: center;
-            gap: 10px;
-        }
-        .user-info.show {
-            display: flex;
-        }
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.6);
-        }
-        .user-name {
-            font-size: 13px;
-            color: white;
-        }
-        .logout-btn {
-            padding: 6px 12px;
-            font-size: 12px;
-            color: white;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.25);
-        }
-        .login-required {
-            display: none;
-            text-align: center;
-            padding: 40px 20px;
-        }
-        .login-required.show {
-            display: block;
-        }
-        .login-required h3 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .login-required p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-        .main-content {
-            display: block;
-        }
-        .main-content.hidden {
-            display: none;
-        }
         .content { padding: 25px; }
         .form-group { margin-bottom: 18px; }
         .form-group label {
@@ -237,36 +155,12 @@
 </head>
 <body>
     <div class="container">
-        <div class="header" style="position: relative;">
-            <div class="login-section">
-                <div id="loginBtn" class="login-btn" onclick="loginWithGithub()">
-                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-                    </svg>
-                    GitHub 登录
-                </div>
-                <div id="userInfo" class="user-info">
-                    <img id="userAvatar" class="user-avatar" src="" alt="avatar">
-                    <span id="userName" class="user-name"></span>
-                    <button class="logout-btn" onclick="logout()">退出</button>
-                </div>
-            </div>
+        <div class="header">
             <h1>汇川伺服选型工具</h1>
             <p>基于汇川官方选型表数据 | 支持多电压等级显示</p>
         </div>
         
-        <div id="loginRequired" class="login-required">
-            <h3>请先登录</h3>
-            <p>使用 GitHub 账号登录后即可使用选型工具</p>
-            <button class="login-btn" onclick="loginWithGithub()" style="margin: 0 auto; display: flex;">
-                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;fill:white;">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-                </svg>
-                使用 GitHub 登录
-            </button>
-        </div>
-        
-        <div id="mainContent" class="content">
+        <div class="content">
             <div class="form-row">
                 <div class="form-group">
                     <label>驱动器系列</label>
@@ -842,14 +736,10 @@
                     const motorModel = isBrake ? item.motorB : item.motorNB;
                     const encoderCable = getEncoderCable(series, item.motorSeries, motorModel, isBrake) + '-' + cableLength;
                     const powerCable = getPowerCable(item.motorSeries, power, isBrake) + '-' + cableLength;
-                    const isP = series.includes('P') || series.includes('F');
+                    const isP = series.includes('P');
                     let ioCable = '-';
                     if (isP) {
-                        if (item.motorSeries === 'MS1H2' && parseFloat(power) === 1.0) {
-                            ioCable = 'S6-C8-' + cableLength;
-                        } else {
-                            ioCable = 'S6-C6-' + cableLength;
-                        }
+                        ioCable = 'S6-C8-' + cableLength;
                     }
                     
                     const card = document.createElement('div');
@@ -895,105 +785,6 @@
                 alert('已复制到剪贴板');
             });
         }
-        
-        // GitHub 登录功能 - 使用隐式授权模式
-        function loginWithGithub() {
-            const clientId = 'Ov23liHXLgFXwJN2Jv8c';
-            const redirectUri = window.location.origin + '/index.html';
-            const scope = 'read:user';
-            const state = Math.random().toString(36).substring(7);
-            localStorage.setItem('github_oauth_state', state);
-            
-            const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}&response_type=token`;
-            window.location.href = authUrl;
-        }
-        
-        // 处理OAuth回调
-        function handleOAuthCallback() {
-            const hash = window.location.hash;
-            if (hash && hash.includes('access_token')) {
-                const params = new URLSearchParams(hash.substring(1));
-                const token = params.get('access_token');
-                const state = params.get('state');
-                const savedState = localStorage.getItem('github_oauth_state');
-                
-                if (token && state === savedState) {
-                    // 获取用户信息
-                    fetch('https://api.github.com/user', {
-                        headers: { 'Authorization': `token ${token}`, 'User-Agent': 'ServoSelector' }
-                    })
-                    .then(res => res.json())
-                    .then(user => {
-                        const userData = {
-                            id: user.id,
-                            login: user.login,
-                            name: user.name || user.login,
-                            avatar: user.avatar_url,
-                            token: token
-                        };
-                        localStorage.setItem('github_user', JSON.stringify(userData));
-                        localStorage.removeItem('github_oauth_state');
-                        // 清除URL中的hash
-                        window.location.hash = '';
-                        window.location.reload();
-                    })
-                    .catch(err => {
-                        console.error('Login failed:', err);
-                        alert('登录失败，请重试');
-                    });
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        // 更新UI
-        function updateUI(user) {
-            const loginBtn = document.getElementById('loginBtn');
-            const userInfo = document.getElementById('userInfo');
-            const loginRequired = document.getElementById('loginRequired');
-            const mainContent = document.getElementById('mainContent');
-            
-            if (user) {
-                loginBtn.style.display = 'none';
-                userInfo.classList.add('show');
-                document.getElementById('userAvatar').src = user.avatar;
-                document.getElementById('userName').textContent = user.name;
-                loginRequired.classList.remove('show');
-                mainContent.classList.remove('hidden');
-            } else {
-                loginBtn.style.display = 'flex';
-                userInfo.classList.remove('show');
-                loginRequired.classList.add('show');
-                mainContent.classList.add('hidden');
-            }
-        }
-        
-        // 退出登录
-        function logout() {
-            localStorage.removeItem('github_user');
-            updateUI(null);
-        }
-        
-        // 页面加载时检查登录状态
-        document.addEventListener('DOMContentLoaded', function() {
-            // 先处理OAuth回调
-            if (handleOAuthCallback()) {
-                return; // 处理回调后会自动刷新页面
-            }
-            
-            const savedUser = localStorage.getItem('github_user');
-            if (savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    updateUI(user);
-                } catch (e) {
-                    logout();
-                }
-            } else {
-                updateUI(null);
-            }
-        });
     </script>
 </body>
 </html>
